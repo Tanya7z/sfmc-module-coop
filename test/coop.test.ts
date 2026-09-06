@@ -106,7 +106,6 @@ describe("coop manifest", () => {
       "db:read:sfmc_coop_members",
       "db:write:sfmc_coop_members",
       "service:gui.registerMenuItem",
-      "command:coop",
     ]) {
       assert.ok(manifest.permissions.includes(p), `缺少权限 ${p}`);
     }

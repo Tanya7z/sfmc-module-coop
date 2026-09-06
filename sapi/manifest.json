@@ -6,14 +6,16 @@
   "configKey": "coop",
   "enabledByDefault": true,
   "canDisable": true,
-  "requires": ["economy", "activity-log"],
+  "requires": [
+    "economy",
+    "activity-log"
+  ],
   "permissions": [
     "config:read:coop",
     "db:read:sfmc_coops",
     "db:write:sfmc_coops",
     "db:read:sfmc_coop_members",
     "db:write:sfmc_coop_members",
-    "command:coop",
     "service:coop.byId",
     "service:coop.list",
     "service:coop.byPlayer",
@@ -26,24 +28,42 @@
     "provides": [
       {
         "name": "coop.byId",
-        "input": { "type": "object" },
-        "output": { "type": "object" }
+        "input": {
+          "type": "object"
+        },
+        "output": {
+          "type": "object"
+        }
       },
       {
         "name": "coop.list",
-        "input": { "type": "object" },
-        "output": { "type": "object" }
+        "input": {
+          "type": "object"
+        },
+        "output": {
+          "type": "object"
+        }
       },
       {
         "name": "coop.byPlayer",
-        "input": { "type": "object" },
-        "output": { "type": "object" }
+        "input": {
+          "type": "object"
+        },
+        "output": {
+          "type": "object"
+        }
       }
     ],
     "requires": [
-      { "name": "economy.account.get" },
-      { "name": "economy.account.transfer" },
-      { "name": "activity.record" }
+      {
+        "name": "economy.account.get"
+      },
+      {
+        "name": "economy.account.transfer"
+      },
+      {
+        "name": "activity.record"
+      }
     ]
   },
   "notes": "公账 coop:<cid> 托管 economy；审计 activity.record(eventType=coop.audit)；弱挂载 gui.registerMenuItem。"
