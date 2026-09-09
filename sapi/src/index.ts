@@ -6,11 +6,7 @@ import type { Player } from "@minecraft/server";
 import { ModuleRegistry } from "@sfmc-bds/sdk/module-loader";
 import { Command, debug, Msg, Permission } from "@sfmc-bds/sdk/sapi/runtime";
 import { service } from "@sfmc-bds/sdk/sapi/service";
-import {
-  serviceById,
-  serviceByPlayer,
-  serviceList,
-} from "./ops.js";
+import { serviceById, serviceByPlayer, serviceList } from "./ops.js";
 import { openCoopPanel, showCoopHelp } from "./panel.js";
 import { defineCoopTables } from "./store.js";
 
@@ -35,12 +31,31 @@ async function tryRegisterGuiMenu(): Promise<void> {
     } as unknown as Record<string, unknown>);
     debug.i("COOP", "gui menu registered");
   } catch (err) {
-    debug.w(
-      "COOP",
-      `gui.registerMenuItem 不可用，已降级: ${err instanceof Error ? err.message : String(err)}`,
-    );
+    debug.w("COOP", `gui.registerMenuItem 不可用，已降级: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
+
+function registerCommands(): void {
+  Command.register(
+    "coop",
+    "coop.use",
+    (player) => {
+      if (!player) {
+        debug.i("COOP", "该指令必须由玩家执行");
+        return;
+      }
+      void openCoopPanel(player).catch((err) => {
+        debug.w("COOP", `open panel: ${err instanceof Error ? err.message : String(err)}`);
+        Msg.error("无法打开合作社面板，已显示文字指引。", player);
+        showCoopHelp(player);
+      });
+    },
+    "打开合作社面板（建社/入退/金库/排行）",
+    MODULE_ID
+  );
+}
+
+registerCommands();
 
 ModuleRegistry.register({
   id: MODULE_ID,
@@ -50,25 +65,6 @@ ModuleRegistry.register({
       Permission.register("coop.use", Permission.Member);
       // 设计写「Admin（等级 2）」→ SDK 中 OP=2
       Permission.register("coop.admin", Permission.OP);
-    },
-    registerCommands() {
-      Command.register(
-        "coop",
-        "coop.use",
-        (player) => {
-          if (!player) {
-            debug.i("COOP", "该指令必须由玩家执行");
-            return;
-          }
-          void openCoopPanel(player).catch((err) => {
-            debug.w("COOP", `open panel: ${err instanceof Error ? err.message : String(err)}`);
-            Msg.error("无法打开合作社面板，已显示文字指引。", player);
-            showCoopHelp(player);
-          });
-        },
-        "打开合作社面板（建社/入退/金库/排行）",
-        MODULE_ID,
-      );
     },
     registerEvents() {
       // 本模块无世界事件订阅
