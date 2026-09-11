@@ -1,0 +1,44 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/gh/DogeLakeDev/ScriptsForMinecraftServer@latest/modules/sdk/%40sfmc-sdk/schemas/ui-screen.v1.schema.json",
+  "formatVersion": 1,
+  "id": "coop.bank",
+  "name": "合作社金库",
+  "presentation": "form",
+  "title": "金库存取",
+  "state": {
+    "amount": { "type": "number", "default": 1, "min": 1, "max": 100000, "step": 1 }
+  },
+  "load": {
+    "overview": { "service": "coop.ui.overview", "input": { "playerId": "{{player.id}}" } }
+  },
+  "body": [
+    {
+      "id": "balance",
+      "type": "info",
+      "items": ["公账余额：{{data.overview.bankBalance}}", "普通成员可以存款；提现需要社长或管理员。"]
+    },
+    { "id": "amount", "type": "slider", "label": "金额", "bind": "state.amount", "min": 1, "max": 100000, "step": 1 },
+    { "id": "deposit", "type": "button", "label": "存入公账", "trigger": { "type": "action", "action": "deposit" } },
+    {
+      "id": "withdraw",
+      "type": "button",
+      "label": "提现到个人",
+      "visibleWhen": { "ref": "data.overview.canWithdraw" },
+      "trigger": { "type": "action", "action": "withdraw" }
+    },
+    { "id": "back", "type": "button", "label": "返回", "trigger": { "type": "back" } }
+  ],
+  "actions": {
+    "deposit": {
+      "call": { "service": "coop.ui.deposit", "input": { "playerId": "{{player.id}}", "amount": "{{state.amount}}" } },
+      "onSuccess": [{ "effect": "message", "text": "存款成功", "tone": "success" }, { "effect": "refresh" }],
+      "onError": [{ "effect": "message", "text": "存款失败：{{result.message}}", "tone": "danger" }]
+    },
+    "withdraw": {
+      "confirm": { "title": "公账提现", "body": "确认从公账提取 {{state.amount}} 吗？" },
+      "call": { "service": "coop.ui.withdraw", "input": { "playerId": "{{player.id}}", "amount": "{{state.amount}}" } },
+      "onSuccess": [{ "effect": "message", "text": "提现成功", "tone": "success" }, { "effect": "refresh" }],
+      "onError": [{ "effect": "message", "text": "提现失败：{{result.message}}", "tone": "danger" }]
+    }
+  }
+}

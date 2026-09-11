@@ -1,0 +1,99 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/gh/DogeLakeDev/ScriptsForMinecraftServer@latest/modules/sdk/%40sfmc-sdk/schemas/ui-screen.v1.schema.json",
+  "formatVersion": 1,
+  "id": "coop.home",
+  "name": "合作社",
+  "presentation": "reactive",
+  "title": "合作社",
+  "load": {
+    "overview": {
+      "service": "coop.ui.overview",
+      "input": { "playerId": "{{player.id}}" }
+    }
+  },
+  "body": [
+    {
+      "id": "not-member",
+      "type": "when",
+      "condition": {
+        "op": "equals",
+        "args": [{ "ref": "data.overview.membership" }, { "value": null }]
+      },
+      "content": [
+        { "id": "not-member-tip", "type": "info", "items": ["你尚未加入任何合作社。"], "tone": "muted" },
+        {
+          "id": "create",
+          "type": "button",
+          "label": "创建合作社",
+          "trigger": { "type": "navigate", "to": "coop.create" }
+        },
+        { "id": "join", "type": "button", "label": "加入合作社", "trigger": { "type": "navigate", "to": "coop.join" } }
+      ]
+    },
+    {
+      "id": "member",
+      "type": "when",
+      "condition": {
+        "op": "notEquals",
+        "args": [{ "ref": "data.overview.membership" }, { "value": null }]
+      },
+      "content": [
+        {
+          "id": "overview",
+          "type": "info",
+          "items": [
+            "当前：{{data.overview.coop.name}}",
+            "职务：{{data.overview.membership.roleLabel}}",
+            "成员：{{data.overview.coop.memberCount}}",
+            "公账：{{data.overview.bankBalance}}"
+          ]
+        },
+        { "id": "bank", "type": "button", "label": "金库存取", "trigger": { "type": "navigate", "to": "coop.bank" } },
+        {
+          "id": "members",
+          "type": "button",
+          "label": "成员管理",
+          "trigger": { "type": "navigate", "to": "coop.members" }
+        },
+        {
+          "id": "leave",
+          "type": "button",
+          "label": "退出合作社",
+          "visibleWhen": {
+            "op": "notEquals",
+            "args": [{ "ref": "data.overview.membership.role" }, { "value": "owner" }]
+          },
+          "trigger": { "type": "action", "action": "leave" }
+        },
+        {
+          "id": "dissolve",
+          "type": "button",
+          "label": "解散合作社",
+          "tone": "danger",
+          "visibleWhen": { "ref": "data.overview.canDissolve" },
+          "trigger": { "type": "action", "action": "dissolve" }
+        }
+      ]
+    },
+    { "id": "rank", "type": "button", "label": "活跃排行", "trigger": { "type": "navigate", "to": "coop.rank" } },
+    { "id": "refresh", "type": "button", "label": "刷新", "trigger": { "type": "refresh" } },
+    { "id": "close", "type": "button", "label": "关闭", "trigger": { "type": "close" } }
+  ],
+  "actions": {
+    "leave": {
+      "confirm": { "title": "退出合作社", "body": "确认退出当前合作社吗？" },
+      "call": { "service": "coop.ui.leave", "input": { "playerId": "{{player.id}}" } },
+      "onSuccess": [{ "effect": "message", "text": "已退出合作社", "tone": "success" }, { "effect": "refresh" }]
+    },
+    "dissolve": {
+      "confirm": {
+        "title": "解散合作社",
+        "body": "确认解散 {{data.overview.coop.name}}？成员将全部移除，公账余额不会自动清零。",
+        "confirmText": "确认解散",
+        "danger": true
+      },
+      "call": { "service": "coop.ui.dissolve", "input": { "playerId": "{{player.id}}" } },
+      "onSuccess": [{ "effect": "message", "text": "合作社已解散", "tone": "success" }, { "effect": "refresh" }]
+    }
+  }
+}

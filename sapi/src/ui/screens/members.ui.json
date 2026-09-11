@@ -1,0 +1,70 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/gh/DogeLakeDev/ScriptsForMinecraftServer@latest/modules/sdk/%40sfmc-sdk/schemas/ui-screen.v1.schema.json",
+  "formatVersion": 1,
+  "id": "coop.members",
+  "name": "成员管理",
+  "presentation": "menu",
+  "title": "成员管理",
+  "load": {
+    "members": { "service": "coop.ui.members", "input": { "playerId": "{{player.id}}" } }
+  },
+  "body": [
+    {
+      "id": "member-list",
+      "type": "each",
+      "source": "data.members.items",
+      "as": "member",
+      "template": [
+        { "id": "member-info", "type": "info", "items": ["{{member.playerName}}（{{member.roleLabel}}）"] },
+        {
+          "id": "transfer",
+          "type": "button",
+          "label": "转让社长给 {{member.playerName}}",
+          "visibleWhen": { "ref": "member.canTransfer" },
+          "trigger": {
+            "type": "action",
+            "action": "transfer",
+            "input": { "targetPlayerId": "{{member.playerId}}" }
+          }
+        },
+        {
+          "id": "kick",
+          "type": "button",
+          "label": "踢出 {{member.playerName}}",
+          "tone": "danger",
+          "visibleWhen": { "ref": "member.canKick" },
+          "trigger": {
+            "type": "action",
+            "action": "kick",
+            "input": { "targetPlayerId": "{{member.playerId}}" }
+          }
+        },
+        { "id": "divider", "type": "divider" }
+      ],
+      "empty": [{ "id": "empty", "type": "info", "items": ["暂无其他成员"], "tone": "muted" }]
+    },
+    { "id": "refresh", "type": "button", "label": "刷新", "trigger": { "type": "refresh" } },
+    { "id": "back", "type": "button", "label": "返回", "trigger": { "type": "back" } }
+  ],
+  "actions": {
+    "transfer": {
+      "confirm": {
+        "title": "转让社长",
+        "body": "确认转让社长？转让后你将变为管理员。",
+        "confirmText": "确认转让"
+      },
+      "call": { "service": "coop.ui.transfer", "input": { "playerId": "{{player.id}}" } },
+      "onSuccess": [
+        { "effect": "message", "text": "社长已转让", "tone": "success" },
+        { "effect": "replace", "to": "coop.home" }
+      ],
+      "onError": [{ "effect": "message", "text": "转让失败：{{result.message}}", "tone": "danger" }]
+    },
+    "kick": {
+      "confirm": { "title": "踢出成员", "body": "确认踢出该成员？", "confirmText": "确认踢出", "danger": true },
+      "call": { "service": "coop.ui.kick", "input": { "playerId": "{{player.id}}" } },
+      "onSuccess": [{ "effect": "message", "text": "成员已踢出", "tone": "success" }, { "effect": "refresh" }],
+      "onError": [{ "effect": "message", "text": "操作失败：{{result.message}}", "tone": "danger" }]
+    }
+  }
+}

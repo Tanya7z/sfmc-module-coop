@@ -1,0 +1,38 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/gh/DogeLakeDev/ScriptsForMinecraftServer@latest/modules/sdk/%40sfmc-sdk/schemas/ui-screen.v1.schema.json",
+  "formatVersion": 1,
+  "id": "coop.create",
+  "name": "创建合作社",
+  "presentation": "form",
+  "title": "创建合作社",
+  "state": {
+    "name": { "type": "string", "default": "", "maxLength": 24 }
+  },
+  "body": [
+    {
+      "id": "name",
+      "type": "textField",
+      "label": "社名",
+      "bind": "state.name",
+      "description": "最长 24 个字符，不能包含冒号"
+    },
+    {
+      "id": "submit",
+      "type": "button",
+      "label": "确认创建",
+      "tone": "primary",
+      "trigger": { "type": "action", "action": "create" }
+    },
+    { "id": "back", "type": "button", "label": "返回", "trigger": { "type": "back" } }
+  ],
+  "actions": {
+    "create": {
+      "call": { "service": "coop.ui.create", "input": { "playerId": "{{player.id}}", "name": "{{state.name}}" } },
+      "onSuccess": [
+        { "effect": "message", "text": "已创建合作社 {{result.name}}", "tone": "success" },
+        { "effect": "replace", "to": "coop.home" }
+      ],
+      "onError": [{ "effect": "message", "text": "创建失败：{{result.message}}", "tone": "danger" }]
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/gh/DogeLakeDev/ScriptsForMinecraftServer@latest/modules/sdk/%40sfmc-sdk/schemas/ui-screen.v1.schema.json",
+  "formatVersion": 1,
+  "id": "coop.join",
+  "name": "加入合作社",
+  "presentation": "form",
+  "title": "加入合作社",
+  "state": {
+    "key": { "type": "string", "default": "" }
+  },
+  "body": [
+    { "id": "key", "type": "textField", "label": "合作社 ID 或社名", "bind": "state.key" },
+    {
+      "id": "submit",
+      "type": "button",
+      "label": "确认加入",
+      "tone": "primary",
+      "trigger": { "type": "action", "action": "join" }
+    },
+    { "id": "back", "type": "button", "label": "返回", "trigger": { "type": "back" } }
+  ],
+  "actions": {
+    "join": {
+      "call": { "service": "coop.ui.join", "input": { "playerId": "{{player.id}}", "key": "{{state.key}}" } },
+      "onSuccess": [
+        { "effect": "message", "text": "已加入 {{result.name}}", "tone": "success" },
+        { "effect": "replace", "to": "coop.home" }
+      ],
+      "onError": [{ "effect": "message", "text": "加入失败：{{result.message}}", "tone": "danger" }]
+    }
+  }
+}

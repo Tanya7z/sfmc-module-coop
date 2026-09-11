@@ -2,37 +2,37 @@
  * @sfmc-bds/module-coop — 合作社公账与组织治理
  */
 
-import type { Player } from "@minecraft/server";
 import { ModuleRegistry } from "@sfmc-bds/sdk/module-loader";
-import { Command, debug, Msg, Permission } from "@sfmc-bds/sdk/sapi/runtime";
+import { Command, debug, Permission } from "@sfmc-bds/sdk/sapi/runtime";
 import { service } from "@sfmc-bds/sdk/sapi/service";
 import { serviceById, serviceByPlayer, serviceList } from "./ops.js";
-import { openCoopPanel, showCoopHelp } from "./panel.js";
 import { defineCoopTables } from "./store.js";
+import { coopUiServices } from "./ui-services.js";
+import featureUi from "./ui/feature.ui.json" with { type: "json" };
+import bankUi from "./ui/screens/bank.ui.json" with { type: "json" };
+import createUi from "./ui/screens/create.ui.json" with { type: "json" };
+import homeUi from "./ui/screens/home.ui.json" with { type: "json" };
+import joinUi from "./ui/screens/join.ui.json" with { type: "json" };
+import membersUi from "./ui/screens/members.ui.json" with { type: "json" };
+import rankUi from "./ui/screens/rank.ui.json" with { type: "json" };
 
 export const MODULE_ID = "coop";
 
 const unprovide: Array<() => void> = [];
 
-async function tryRegisterGuiMenu(): Promise<void> {
-  try {
-    await service.call("gui.registerMenuItem", {
-      id: "coop.panel",
-      title: "合作社",
-      order: 35,
-      category: "general",
-      permission: "coop.use",
-      handler: (player: Player) => {
-        void openCoopPanel(player).catch((err) => {
-          debug.w("COOP", `panel: ${err instanceof Error ? err.message : String(err)}`);
-          showCoopHelp(player);
-        });
-      },
-    } as unknown as Record<string, unknown>);
-    debug.i("COOP", "gui menu registered");
-  } catch (err) {
-    debug.w("COOP", `gui.registerMenuItem 不可用，已降级: ${err instanceof Error ? err.message : String(err)}`);
-  }
+async function registerUiFeature(): Promise<void> {
+  const result = await service.call<{ ok?: boolean; error?: string }>("gui.registerFeature", {
+    feature: featureUi,
+    screens: {
+      "screens/home.ui.json": homeUi,
+      "screens/create.ui.json": createUi,
+      "screens/join.ui.json": joinUi,
+      "screens/bank.ui.json": bankUi,
+      "screens/rank.ui.json": rankUi,
+      "screens/members.ui.json": membersUi,
+    },
+  });
+  if (!result?.ok) throw new Error(result?.error || "合作社 UI 注册失败");
 }
 
 function registerCommands(): void {
@@ -44,11 +44,15 @@ function registerCommands(): void {
         debug.i("COOP", "该指令必须由玩家执行");
         return;
       }
-      void openCoopPanel(player).catch((err) => {
-        debug.w("COOP", `open panel: ${err instanceof Error ? err.message : String(err)}`);
-        Msg.error("无法打开合作社面板，已显示文字指引。", player);
-        showCoopHelp(player);
-      });
+      void service
+        .call("gui.openScreen", {
+          playerId: player.id,
+          moduleId: MODULE_ID,
+          screenId: "coop.home",
+        })
+        .catch((error) => {
+          debug.w("COOP", `open ui: ${error instanceof Error ? error.message : String(error)}`);
+        });
     },
     "打开合作社面板（建社/入退/金库/排行）",
     MODULE_ID
@@ -75,11 +79,15 @@ ModuleRegistry.register({
       unprovide.push(service.provide("coop.byId", (input) => serviceById(input)));
       unprovide.push(service.provide("coop.list", (input) => serviceList(input)));
       unprovide.push(service.provide("coop.byPlayer", (input) => serviceByPlayer(input)));
+      for (const [name, handler] of Object.entries(coopUiServices)) {
+        unprovide.push(service.provide(name, handler));
+      }
 
-      await tryRegisterGuiMenu();
+      await registerUiFeature();
       debug.i("COOP", "init ready");
     },
     cleanup() {
+      void service.call("gui.unregisterFeature", { moduleId: MODULE_ID }).catch(() => undefined);
       for (const off of unprovide.splice(0, unprovide.length)) {
         try {
           off();

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/gh/DogeLakeDev/ScriptsForMinecraftServer@latest/modules/sdk/%40sfmc-sdk/schemas/ui-screen.v1.schema.json",
+  "formatVersion": 1,
+  "id": "coop.rank",
+  "name": "合作社排行",
+  "presentation": "menu",
+  "title": "合作社活跃排行",
+  "load": {
+    "rank": { "service": "coop.ui.rank", "input": { "limit": 10 } }
+  },
+  "body": [
+    {
+      "id": "rank-list",
+      "type": "each",
+      "source": "data.rank.items",
+      "as": "row",
+      "template": [
+        {
+          "id": "rank-row",
+          "type": "info",
+          "items": ["#{{row.rank}} {{row.name}} · 成员 {{row.memberCount}} · 公账 {{row.bankBalance}}"]
+        }
+      ],
+      "empty": [{ "id": "empty", "type": "info", "items": ["暂无合作社"], "tone": "muted" }]
+    },
+    { "id": "refresh", "type": "button", "label": "刷新", "trigger": { "type": "refresh" } },
+    { "id": "back", "type": "button", "label": "返回", "trigger": { "type": "back" } }
+  ]
+}

@@ -6,10 +6,7 @@
   "configKey": "coop",
   "enabledByDefault": true,
   "canDisable": true,
-  "requires": [
-    "economy",
-    "activity-log"
-  ],
+  "requires": ["economy", "activity-log", "gui"],
   "permissions": [
     "config:read:coop",
     "db:read:sfmc_coops",
@@ -19,10 +16,23 @@
     "service:coop.byId",
     "service:coop.list",
     "service:coop.byPlayer",
+    "service:coop.ui.overview",
+    "service:coop.ui.members",
+    "service:coop.ui.rank",
+    "service:coop.ui.create",
+    "service:coop.ui.join",
+    "service:coop.ui.leave",
+    "service:coop.ui.deposit",
+    "service:coop.ui.withdraw",
+    "service:coop.ui.transfer",
+    "service:coop.ui.kick",
+    "service:coop.ui.dissolve",
     "service:economy.account.get",
     "service:economy.account.transfer",
     "service:activity.record",
-    "service:gui.registerMenuItem"
+    "service:gui.registerFeature",
+    "service:gui.unregisterFeature",
+    "service:gui.openScreen"
   ],
   "services": {
     "provides": [
@@ -52,6 +62,61 @@
         "output": {
           "type": "object"
         }
+      },
+      {
+        "name": "coop.ui.overview",
+        "input": { "type": "object" },
+        "output": { "type": "object" }
+      },
+      {
+        "name": "coop.ui.members",
+        "input": { "type": "object" },
+        "output": { "type": "object" }
+      },
+      {
+        "name": "coop.ui.rank",
+        "input": { "type": "object" },
+        "output": { "type": "object" }
+      },
+      {
+        "name": "coop.ui.create",
+        "input": { "type": "object" },
+        "output": { "type": "object" }
+      },
+      {
+        "name": "coop.ui.join",
+        "input": { "type": "object" },
+        "output": { "type": "object" }
+      },
+      {
+        "name": "coop.ui.leave",
+        "input": { "type": "object" },
+        "output": { "type": "object" }
+      },
+      {
+        "name": "coop.ui.deposit",
+        "input": { "type": "object" },
+        "output": { "type": "object" }
+      },
+      {
+        "name": "coop.ui.withdraw",
+        "input": { "type": "object" },
+        "output": { "type": "object" }
+      },
+      {
+        "name": "coop.ui.transfer",
+        "input": { "type": "object" },
+        "output": { "type": "object" }
+      },
+      {
+        "name": "coop.ui.kick",
+        "input": { "type": "object" },
+        "output": { "type": "object" }
+      },
+      {
+        "name": "coop.ui.dissolve",
+        "input": { "type": "object" },
+        "output": { "type": "object" }
       }
     ],
     "requires": [
@@ -63,8 +128,17 @@
       },
       {
         "name": "activity.record"
+      },
+      {
+        "name": "gui.registerFeature"
+      },
+      {
+        "name": "gui.unregisterFeature"
+      },
+      {
+        "name": "gui.openScreen"
       }
     ]
   },
-  "notes": "公账 coop:<cid> 托管 economy；审计 activity.record(eventType=coop.audit)；弱挂载 gui.registerMenuItem。"
+  "notes": "公账 coop:<cid> 托管 economy；审计 activity.record(eventType=coop.audit)；全部玩家界面由声明式 JSON 定义。"
 }

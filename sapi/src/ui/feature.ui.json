@@ -1,0 +1,26 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/gh/DogeLakeDev/ScriptsForMinecraftServer@latest/modules/sdk/%40sfmc-sdk/schemas/ui-feature.v1.schema.json",
+  "formatVersion": 1,
+  "moduleId": "coop",
+  "name": "合作社",
+  "entries": [
+    {
+      "id": "coop.panel",
+      "surface": "player",
+      "group": "general",
+      "title": "合作社",
+      "description": "合作社、公账与成员管理",
+      "order": 35,
+      "permission": "coop.use",
+      "target": "coop.home"
+    }
+  ],
+  "screens": [
+    { "id": "coop.home", "file": "screens/home.ui.json" },
+    { "id": "coop.create", "file": "screens/create.ui.json" },
+    { "id": "coop.join", "file": "screens/join.ui.json" },
+    { "id": "coop.bank", "file": "screens/bank.ui.json" },
+    { "id": "coop.rank", "file": "screens/rank.ui.json" },
+    { "id": "coop.members", "file": "screens/members.ui.json" }
+  ]
+}

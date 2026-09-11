@@ -89,15 +89,40 @@ describe("coop manifest", () => {
     assert.equal(manifest.schemaVersion, 2);
     assert.equal(manifest.id, "coop");
     assert.equal(manifest.configKey, "coop");
-    assert.deepEqual(manifest.requires, ["economy", "activity-log"]);
+    assert.deepEqual(manifest.requires, ["economy", "activity-log", "gui"]);
 
     const provides = manifest.services.provides.map((p) => p.name).sort();
-    assert.deepEqual(provides, ["coop.byId", "coop.byPlayer", "coop.list"].sort());
+    assert.deepEqual(
+      provides,
+      [
+        "coop.byId",
+        "coop.byPlayer",
+        "coop.list",
+        "coop.ui.overview",
+        "coop.ui.members",
+        "coop.ui.rank",
+        "coop.ui.create",
+        "coop.ui.join",
+        "coop.ui.leave",
+        "coop.ui.deposit",
+        "coop.ui.withdraw",
+        "coop.ui.transfer",
+        "coop.ui.kick",
+        "coop.ui.dissolve",
+      ].sort()
+    );
 
     const reqSvc = manifest.services.requires.map((r) => r.name).sort();
     assert.deepEqual(
       reqSvc,
-      ["activity.record", "economy.account.get", "economy.account.transfer"].sort(),
+      [
+        "activity.record",
+        "economy.account.get",
+        "economy.account.transfer",
+        "gui.registerFeature",
+        "gui.unregisterFeature",
+        "gui.openScreen",
+      ].sort()
     );
 
     for (const p of [
@@ -105,7 +130,7 @@ describe("coop manifest", () => {
       "db:write:sfmc_coops",
       "db:read:sfmc_coop_members",
       "db:write:sfmc_coop_members",
-      "service:gui.registerMenuItem",
+      "service:gui.registerFeature",
     ]) {
       assert.ok(manifest.permissions.includes(p), `缺少权限 ${p}`);
     }
