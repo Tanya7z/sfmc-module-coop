@@ -6,7 +6,7 @@
   "configKey": "coop",
   "enabledByDefault": true,
   "canDisable": true,
-  "requires": ["economy", "activity-log", "gui"],
+  "requires": ["economy", "activity-log"],
   "permissions": [
     "config:read:coop",
     "db:read:sfmc_coops",
@@ -29,10 +29,7 @@
     "service:coop.ui.dissolve",
     "service:economy.account.get",
     "service:economy.account.transfer",
-    "service:activity.record",
-    "service:gui.registerFeature",
-    "service:gui.unregisterFeature",
-    "service:gui.openScreen"
+    "service:activity.record"
   ],
   "services": {
     "provides": [
@@ -128,15 +125,6 @@
       },
       {
         "name": "activity.record"
-      },
-      {
-        "name": "gui.registerFeature"
-      },
-      {
-        "name": "gui.unregisterFeature"
-      },
-      {
-        "name": "gui.openScreen"
       }
     ]
   },

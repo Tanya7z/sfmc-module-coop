@@ -89,7 +89,7 @@ describe("coop manifest", () => {
     assert.equal(manifest.schemaVersion, 2);
     assert.equal(manifest.id, "coop");
     assert.equal(manifest.configKey, "coop");
-    assert.deepEqual(manifest.requires, ["economy", "activity-log", "gui"]);
+    assert.deepEqual(manifest.requires, ["economy", "activity-log"]);
 
     const provides = manifest.services.provides.map((p) => p.name).sort();
     assert.deepEqual(
@@ -119,9 +119,6 @@ describe("coop manifest", () => {
         "activity.record",
         "economy.account.get",
         "economy.account.transfer",
-        "gui.registerFeature",
-        "gui.unregisterFeature",
-        "gui.openScreen",
       ].sort()
     );
 
@@ -130,10 +127,10 @@ describe("coop manifest", () => {
       "db:write:sfmc_coops",
       "db:read:sfmc_coop_members",
       "db:write:sfmc_coop_members",
-      "service:gui.registerFeature",
     ]) {
       assert.ok(manifest.permissions.includes(p), `缺少权限 ${p}`);
     }
+    assert.ok(!manifest.permissions.some((p) => p.startsWith("service:gui.")));
 
     // 严禁自建钱包/审计表权限位
     assert.ok(!manifest.permissions.some((x) => /wallet|ledger|audit_log|bank_balance/i.test(x)));

@@ -5,6 +5,7 @@
 import { ModuleRegistry } from "@sfmc-bds/sdk/module-loader";
 import { Command, debug, Permission } from "@sfmc-bds/sdk/sapi/runtime";
 import { service } from "@sfmc-bds/sdk/sapi/service";
+import { ui } from "@sfmc-bds/sdk/sapi/ui";
 import { serviceById, serviceByPlayer, serviceList } from "./ops.js";
 import { defineCoopTables } from "./store.js";
 import { coopUiServices } from "./ui-services.js";
@@ -19,9 +20,11 @@ import rankUi from "./ui/screens/rank.ui.json" with { type: "json" };
 export const MODULE_ID = "coop";
 
 const unprovide: Array<() => void> = [];
+let unregisterUi: (() => void) | undefined;
 
-async function registerUiFeature(): Promise<void> {
-  const result = await service.call<{ ok?: boolean; error?: string }>("gui.registerFeature", {
+function registerUiFeature(): void {
+  unregisterUi?.();
+  unregisterUi = ui.registerFeature({
     feature: featureUi,
     screens: {
       "screens/home.ui.json": homeUi,
@@ -32,7 +35,6 @@ async function registerUiFeature(): Promise<void> {
       "screens/members.ui.json": membersUi,
     },
   });
-  if (!result?.ok) throw new Error(result?.error || "合作社 UI 注册失败");
 }
 
 function registerCommands(): void {
@@ -44,9 +46,8 @@ function registerCommands(): void {
         debug.i("COOP", "该指令必须由玩家执行");
         return;
       }
-      void service
-        .call("gui.openScreen", {
-          playerId: player.id,
+      void ui
+        .openScreen(player, {
           moduleId: MODULE_ID,
           screenId: "coop.home",
         })
@@ -83,11 +84,12 @@ ModuleRegistry.register({
         unprovide.push(service.provide(name, handler));
       }
 
-      await registerUiFeature();
+      registerUiFeature();
       debug.i("COOP", "init ready");
     },
     cleanup() {
-      void service.call("gui.unregisterFeature", { moduleId: MODULE_ID }).catch(() => undefined);
+      unregisterUi?.();
+      unregisterUi = undefined;
       for (const off of unprovide.splice(0, unprovide.length)) {
         try {
           off();
