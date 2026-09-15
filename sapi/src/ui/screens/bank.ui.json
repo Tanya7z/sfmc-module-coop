@@ -2,43 +2,164 @@
   "$schema": "https://cdn.jsdelivr.net/gh/DogeLakeDev/ScriptsForMinecraftServer@latest/modules/sdk/%40sfmc-sdk/schemas/ui-screen.v1.schema.json",
   "formatVersion": 1,
   "id": "coop.bank",
-  "name": "合作社金库",
+  "name": "coop.bank",
   "presentation": "form",
-  "title": "金库存取",
+  "title": "小金库",
   "state": {
-    "amount": { "type": "number", "default": 1, "min": 1, "max": 100000, "step": 1 }
+    "amount": {
+      "type": "number",
+      "default": 1,
+      "min": 1,
+      "max": 100000,
+      "step": 1
+    },
+    "input": {
+      "type": "string"
+    }
   },
   "load": {
-    "overview": { "service": "coop.ui.overview", "input": { "playerId": "{{player.id}}" } }
+    "overview": {
+      "service": "coop.ui.overview",
+      "input": {
+        "playerId": "{{player.id}}"
+      }
+    }
   },
   "body": [
     {
+      "id": "spacer",
+      "type": "spacer",
+      "size": "small"
+    },
+    {
       "id": "balance",
       "type": "info",
-      "items": ["公账余额：{{data.overview.bankBalance}}", "普通成员可以存款；提现需要社长或管理员。"]
+      "items": [
+        "合作社余额：{{data.overview.bankBalance}}",
+        "普通成员可以存款；提现则需要社长或管理员哦。"
+      ]
     },
-    { "id": "amount", "type": "slider", "label": "金额", "bind": "state.amount", "min": 1, "max": 100000, "step": 1 },
-    { "id": "deposit", "type": "button", "label": "存入公账", "trigger": { "type": "action", "action": "deposit" } },
+    {
+      "id": "spacer-2",
+      "type": "spacer",
+      "size": "small"
+    },
+    {
+      "id": "amount",
+      "type": "slider",
+      "label": "金额",
+      "bind": "state.amount",
+      "min": 1,
+      "max": 10000,
+      "step": 1
+    },
+    {
+      "id": "spacer-3",
+      "type": "spacer",
+      "size": "small"
+    },
+    {
+      "id": "textField",
+      "type": "textField",
+      "label": "金额",
+      "bind": "state.amount",
+      "placeholder": "请输入…"
+    },
+    {
+      "id": "spacer-4",
+      "type": "spacer",
+      "size": "small"
+    },
+    {
+      "id": "deposit",
+      "type": "button",
+      "label": "存入",
+      "trigger": {
+        "type": "action",
+        "action": "deposit"
+      }
+    },
     {
       "id": "withdraw",
       "type": "button",
-      "label": "提现到个人",
-      "visibleWhen": { "ref": "data.overview.canWithdraw" },
-      "trigger": { "type": "action", "action": "withdraw" }
+      "label": "提现",
+      "visibleWhen": {
+        "ref": "data.overview.canWithdraw"
+      },
+      "trigger": {
+        "type": "action",
+        "action": "withdraw"
+      }
     },
-    { "id": "back", "type": "button", "label": "返回", "trigger": { "type": "back" } }
+    {
+      "id": "divider",
+      "type": "divider"
+    },
+    {
+      "id": "back",
+      "type": "button",
+      "label": "返回",
+      "trigger": {
+        "type": "back"
+      }
+    }
   ],
   "actions": {
     "deposit": {
-      "call": { "service": "coop.ui.deposit", "input": { "playerId": "{{player.id}}", "amount": "{{state.amount}}" } },
-      "onSuccess": [{ "effect": "message", "text": "存款成功", "tone": "success" }, { "effect": "refresh" }],
-      "onError": [{ "effect": "message", "text": "存款失败：{{result.message}}", "tone": "danger" }]
+      "call": {
+        "service": "coop.ui.deposit",
+        "input": {
+          "playerId": "{{player.id}}",
+          "amount": "{{state.amount}}"
+        }
+      },
+      "onSuccess": [
+        {
+          "effect": "message",
+          "text": "存款成功",
+          "tone": "success"
+        },
+        {
+          "effect": "refresh"
+        }
+      ],
+      "onError": [
+        {
+          "effect": "message",
+          "text": "存款失败：{{result.message}}",
+          "tone": "danger"
+        }
+      ]
     },
     "withdraw": {
-      "confirm": { "title": "公账提现", "body": "确认从公账提取 {{state.amount}} 吗？" },
-      "call": { "service": "coop.ui.withdraw", "input": { "playerId": "{{player.id}}", "amount": "{{state.amount}}" } },
-      "onSuccess": [{ "effect": "message", "text": "提现成功", "tone": "success" }, { "effect": "refresh" }],
-      "onError": [{ "effect": "message", "text": "提现失败：{{result.message}}", "tone": "danger" }]
+      "confirm": {
+        "title": "公账提现",
+        "body": "确认从公账提取 {{state.amount}} 吗？"
+      },
+      "call": {
+        "service": "coop.ui.withdraw",
+        "input": {
+          "playerId": "{{player.id}}",
+          "amount": "{{state.amount}}"
+        }
+      },
+      "onSuccess": [
+        {
+          "effect": "message",
+          "text": "提现成功",
+          "tone": "success"
+        },
+        {
+          "effect": "refresh"
+        }
+      ],
+      "onError": [
+        {
+          "effect": "message",
+          "text": "提现失败：{{result.message}}",
+          "tone": "danger"
+        }
+      ]
     }
   }
 }

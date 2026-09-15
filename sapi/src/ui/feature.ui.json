@@ -16,11 +16,29 @@
     }
   ],
   "screens": [
-    { "id": "coop.home", "file": "screens/home.ui.json" },
-    { "id": "coop.create", "file": "screens/create.ui.json" },
-    { "id": "coop.join", "file": "screens/join.ui.json" },
-    { "id": "coop.bank", "file": "screens/bank.ui.json" },
-    { "id": "coop.rank", "file": "screens/rank.ui.json" },
-    { "id": "coop.members", "file": "screens/members.ui.json" }
+    {
+      "id": "coop.home",
+      "file": "screens/home.ui.json"
+    },
+    {
+      "id": "coop.create",
+      "file": "screens/create.ui.json"
+    },
+    {
+      "id": "coop.join",
+      "file": "screens/join.ui.json"
+    },
+    {
+      "id": "coop.bank",
+      "file": "screens/bank.ui.json"
+    },
+    {
+      "id": "coop.rank",
+      "file": "screens/rank.ui.json"
+    },
+    {
+      "id": "coop.members",
+      "file": "screens/members.ui.json"
+    }
   ]
 }
