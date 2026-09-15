@@ -12,9 +12,6 @@
       "min": 1,
       "max": 100000,
       "step": 1
-    },
-    "input": {
-      "type": "string"
     }
   },
   "load": {
@@ -59,7 +56,7 @@
       "size": "small"
     },
     {
-      "id": "textField",
+      "id": "amount-input",
       "type": "textField",
       "label": "金额",
       "bind": "state.amount",

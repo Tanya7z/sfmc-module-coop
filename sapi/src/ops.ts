@@ -341,11 +341,16 @@ export async function withdrawBank(actor: Actor, amountRaw: unknown): Promise<{ 
   return { balanceHint: result?.balance };
 }
 
+/** 查询公账余额；账户尚未建分或经济侧瞬时失败时视为 0，避免拖垮主页加载。 */
 export async function getBankBalance(cid: string): Promise<number> {
-  const res = (await service.call("economy.account.get", {
-    accountId: coopAccountId(cid),
-  })) as { balance?: number };
-  return typeof res?.balance === "number" ? res.balance : 0;
+  try {
+    const res = (await service.call("economy.account.get", {
+      accountId: coopAccountId(cid),
+    })) as { balance?: number };
+    return typeof res?.balance === "number" ? res.balance : 0;
+  } catch {
+    return 0;
+  }
 }
 
 export async function dissolveCoop(actor: Actor): Promise<{ cid: string }> {

@@ -19,6 +19,7 @@ import {
 } from "../sapi/src/rules.ts";
 
 const MANIFEST_PATH = fileURLToPath(new URL("../sapi/manifest.json", import.meta.url));
+const BANK_UI_PATH = fileURLToPath(new URL("../sapi/src/ui/screens/bank.ui.json", import.meta.url));
 
 describe("coop rules", () => {
   it("公账账户标识为 coop:<cid>", () => {
@@ -134,5 +135,20 @@ describe("coop manifest", () => {
 
     // 严禁自建钱包/审计表权限位
     assert.ok(!manifest.permissions.some((x) => /wallet|ledger|audit_log|bank_balance/i.test(x)));
+  });
+});
+
+describe("coop ui screens", () => {
+  it("小金库滑块与输入框共用 number 类型的 state.amount", () => {
+    const bank = JSON.parse(readFileSync(BANK_UI_PATH, "utf8")) as {
+      state?: Record<string, { type?: string }>;
+      body?: Array<{ type?: string; bind?: string }>;
+    };
+    assert.equal(bank.state?.amount?.type, "number");
+    const amountBinds = (bank.body ?? []).filter(
+      (node) => node.bind === "state.amount",
+    );
+    assert.ok(amountBinds.some((node) => node.type === "slider"));
+    assert.ok(amountBinds.some((node) => node.type === "textField"));
   });
 });
