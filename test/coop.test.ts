@@ -14,12 +14,17 @@ import {
   coopAccountId,
   memberRowId,
   newCid,
+  resolveMemberRole,
   validateAmount,
   validateCoopName,
 } from "../sapi/src/rules.ts";
 
 const MANIFEST_PATH = fileURLToPath(new URL("../sapi/manifest.json", import.meta.url));
 const BANK_UI_PATH = fileURLToPath(new URL("../sapi/src/ui/screens/bank.ui.json", import.meta.url));
+const HOME_UI_PATH = fileURLToPath(new URL("../sapi/src/ui/screens/home.ui.json", import.meta.url));
+const MEMBERS_UI_PATH = fileURLToPath(
+  new URL("../sapi/src/ui/screens/members.ui.json", import.meta.url),
+);
 
 describe("coop rules", () => {
   it("公账账户标识为 coop:<cid>", () => {
@@ -71,6 +76,13 @@ describe("coop rules", () => {
     assert.equal(canKickTarget("admin", "admin"), false);
     assert.equal(canKickTarget("member", "member"), false);
   });
+
+  it("owner_id 与当前玩家一致时视为社长，即使成员表职务不是 owner", () => {
+    assert.equal(resolveMemberRole("member", "p1", "p1"), "owner");
+    assert.equal(resolveMemberRole(" admin ", "p2", "p1"), "admin");
+    assert.equal(resolveMemberRole("OWNER", undefined, "p1"), "owner");
+    assert.equal(resolveMemberRole("guest", "p2", "p1"), "member");
+  });
 });
 
 describe("coop manifest", () => {
@@ -109,6 +121,7 @@ describe("coop manifest", () => {
         "coop.ui.withdraw",
         "coop.ui.transfer",
         "coop.ui.kick",
+        "coop.ui.promote",
         "coop.ui.dissolve",
       ].sort()
     );
@@ -150,5 +163,55 @@ describe("coop ui screens", () => {
     );
     assert.ok(amountBinds.some((node) => node.type === "slider"));
     assert.ok(amountBinds.some((node) => node.type === "textField"));
+  });
+
+  it("社长解散按钮紧挨职务信息，并用职务 ident 兜底显示", () => {
+    const home = JSON.parse(readFileSync(HOME_UI_PATH, "utf8")) as {
+      body: Array<{
+        id?: string;
+        content?: Array<{ id?: string; visibleWhen?: { op?: string } }>;
+      }>;
+    };
+    const member = home.body.find((node) => node.id === "member");
+    const ids = (member?.content ?? []).map((node) => node.id);
+    assert.ok(ids.indexOf("dissolve") > -1);
+    assert.ok(ids.indexOf("dissolve") < ids.indexOf("bank"));
+    const dissolve = member?.content?.find((node) => node.id === "dissolve");
+    assert.equal(dissolve?.visibleWhen?.op, "or");
+  });
+
+  it("成员管理用下拉任命/撤职，不在每人条目上堆按钮", () => {
+    const members = JSON.parse(readFileSync(MEMBERS_UI_PATH, "utf8")) as {
+      presentation?: string;
+      state?: Record<string, { type?: string }>;
+      actions: Record<string, { call?: { service?: string; input?: Record<string, string> } }>;
+      body: Array<{
+        id?: string;
+        type?: string;
+        bind?: string;
+        template?: Array<{ id?: string }>;
+        content?: Array<{ id?: string; bind?: string }>;
+      }>;
+    };
+    assert.equal(members.presentation, "form");
+    assert.equal(members.state?.promoteTargetId?.type, "string");
+    assert.equal(members.state?.demoteTargetId?.type, "string");
+    assert.equal(members.actions.promoteSelected?.call?.service, "coop.ui.promote");
+    assert.equal(
+      members.actions.promoteSelected?.call?.input?.targetPlayerId,
+      "{{state.promoteTargetId}}",
+    );
+    assert.equal(members.actions.promoteSelected?.call?.input?.role, "admin");
+    assert.equal(members.actions.demoteSelected?.call?.input?.role, "member");
+    const promote = members.body.find((node) => node.id === "promote-block");
+    assert.ok(
+      promote?.content?.some((node) => node.bind === "state.promoteTargetId"),
+    );
+    const list = members.body.find((node) => node.template);
+    const ids = (list?.template ?? []).map((node) => node.id);
+    assert.ok(!ids.includes("promote"));
+    assert.ok(!ids.includes("demote"));
+    assert.ok(ids.includes("kick"));
+    assert.ok(ids.includes("transfer"));
   });
 });

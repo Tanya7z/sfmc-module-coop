@@ -53,6 +53,31 @@ export function validateAmount(amount: unknown): number | string {
   return amount;
 }
 
+/**
+ * 把库里的职务收成 owner/admin/member。
+ * 使用场景：脏数据、大小写或空白导致严格相等失败时，门禁与按钮一起失效。
+ */
+export function normalizeCoopRole(role: unknown): CoopRole {
+  const raw = String(role ?? "")
+    .trim()
+    .toLowerCase();
+  if (raw === "owner" || raw === "admin" || raw === "member") return raw;
+  return "member";
+}
+
+/**
+ * 实际职务：合作社 owner_id 与当前玩家一致则视为社长。
+ * 使用场景：成员表 role 未写成 owner，但建社记录仍挂在该玩家名下。
+ */
+export function resolveMemberRole(
+  membershipRole: unknown,
+  ownerId: string | undefined,
+  playerId: string,
+): CoopRole {
+  if (ownerId && playerId && ownerId === playerId) return "owner";
+  return normalizeCoopRole(membershipRole);
+}
+
 /** 是否可提现（仅社长/社管）。 */
 export function canWithdraw(role: CoopRole | null | undefined): boolean {
   return role === "owner" || role === "admin";

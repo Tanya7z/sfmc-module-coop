@@ -26,6 +26,7 @@
     "service:coop.ui.withdraw",
     "service:coop.ui.transfer",
     "service:coop.ui.kick",
+    "service:coop.ui.promote",
     "service:coop.ui.dissolve",
     "service:economy.account.get",
     "service:economy.account.transfer",
@@ -107,6 +108,11 @@
       },
       {
         "name": "coop.ui.kick",
+        "input": { "type": "object" },
+        "output": { "type": "object" }
+      },
+      {
+        "name": "coop.ui.promote",
         "input": { "type": "object" },
         "output": { "type": "object" }
       },

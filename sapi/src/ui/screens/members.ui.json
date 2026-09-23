@@ -1,10 +1,20 @@
 {
-  "$schema": "https://cdn.jsdelivr.net/gh/DogeLakeDev/ScriptsForMinecraftServer@latest/modules/sdk/%40sfmc-sdk/schemas/ui-screen.v1.schema.json",
+  "$schema": "https://cdn.jsdelivr.net/gh/DogeLakeDev/ScriptsForMinecraftServer@latest/modules/sdk/@sfmc-sdk/schemas/ui-screen.v1.schema.json",
   "formatVersion": 1,
   "id": "coop.members",
   "name": "coop.members",
-  "presentation": "menu",
+  "presentation": "form",
   "title": "成员管理",
+  "state": {
+    "promoteTargetId": {
+      "type": "string",
+      "default": ""
+    },
+    "demoteTargetId": {
+      "type": "string",
+      "default": ""
+    }
+  },
   "load": {
     "members": {
       "service": "coop.ui.members",
@@ -18,6 +28,98 @@
       "id": "spacer",
       "type": "spacer",
       "size": "small"
+    },
+    {
+      "id": "role-tip",
+      "type": "info",
+      "tone": "muted",
+      "visibleWhen": {
+        "ref": "data.members.canManageRoles"
+      },
+      "items": [
+        "管理员可提现、踢出普通成员；不能解散、不能改职务、不能踢其他管理员。"
+      ]
+    },
+    {
+      "id": "promote-block",
+      "type": "when",
+      "condition": {
+        "op": "greaterThan",
+        "args": [
+          {
+            "ref": "data.members.promotableCount"
+          },
+          {
+            "value": 0
+          }
+        ]
+      },
+      "content": [
+        {
+          "id": "promote-target",
+          "type": "dropdown",
+          "label": "任命管理员",
+          "bind": "state.promoteTargetId",
+          "options": {
+            "source": "data.members.promotableItems",
+            "as": "row",
+            "value": "{{row.playerId}}",
+            "label": "{{row.playerName}}"
+          }
+        },
+        {
+          "id": "promote-btn",
+          "type": "button",
+          "label": "任命为管理员",
+          "tone": "primary",
+          "trigger": {
+            "type": "action",
+            "action": "promoteSelected"
+          }
+        }
+      ]
+    },
+    {
+      "id": "demote-block",
+      "type": "when",
+      "condition": {
+        "op": "greaterThan",
+        "args": [
+          {
+            "ref": "data.members.demotableCount"
+          },
+          {
+            "value": 0
+          }
+        ]
+      },
+      "content": [
+        {
+          "id": "demote-target",
+          "type": "dropdown",
+          "label": "撤职管理员",
+          "bind": "state.demoteTargetId",
+          "options": {
+            "source": "data.members.demotableItems",
+            "as": "row",
+            "value": "{{row.playerId}}",
+            "label": "{{row.playerName}}"
+          }
+        },
+        {
+          "id": "demote-btn",
+          "type": "button",
+          "label": "降为普通成员",
+          "trigger": {
+            "type": "action",
+            "action": "demoteSelected"
+          }
+        }
+      ]
+    },
+    {
+      "id": "divider-roles",
+      "type": "divider"
     },
     {
       "id": "member-list",
@@ -73,7 +175,7 @@
           "id": "empty",
           "type": "info",
           "items": [
-            "暂无其他成员"
+            "暂无其他成员。让别人加入后再在此任命管理员、转让或踢人。"
           ],
           "tone": "muted"
         }
@@ -106,6 +208,70 @@
     }
   ],
   "actions": {
+    "promoteSelected": {
+      "confirm": {
+        "title": "任命管理员",
+        "body": "确认任命为管理员？对方将可以提现、踢出普通成员。",
+        "confirmText": "确认任命"
+      },
+      "call": {
+        "service": "coop.ui.promote",
+        "input": {
+          "playerId": "{{player.id}}",
+          "targetPlayerId": "{{state.promoteTargetId}}",
+          "role": "admin"
+        }
+      },
+      "onSuccess": [
+        {
+          "effect": "message",
+          "text": "已任命为管理员",
+          "tone": "success"
+        },
+        {
+          "effect": "refresh"
+        }
+      ],
+      "onError": [
+        {
+          "effect": "message",
+          "text": "任命失败：{{result.message}}",
+          "tone": "danger"
+        }
+      ]
+    },
+    "demoteSelected": {
+      "confirm": {
+        "title": "撤职管理员",
+        "body": "确认将该管理员降为普通成员？",
+        "confirmText": "确认撤职"
+      },
+      "call": {
+        "service": "coop.ui.promote",
+        "input": {
+          "playerId": "{{player.id}}",
+          "targetPlayerId": "{{state.demoteTargetId}}",
+          "role": "member"
+        }
+      },
+      "onSuccess": [
+        {
+          "effect": "message",
+          "text": "已降为普通成员",
+          "tone": "success"
+        },
+        {
+          "effect": "refresh"
+        }
+      ],
+      "onError": [
+        {
+          "effect": "message",
+          "text": "撤职失败：{{result.message}}",
+          "tone": "danger"
+        }
+      ]
+    },
     "transfer": {
       "confirm": {
         "title": "转让社长",

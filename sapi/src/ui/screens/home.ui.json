@@ -96,9 +96,49 @@
           ]
         },
         {
+          "id": "owner-tip",
+          "type": "info",
+          "tone": "muted",
+          "visibleWhen": {
+            "ref": "data.overview.canManageRoles"
+          },
+          "items": [
+            "任命管理员、转让社长请进入「成员管理」。管理员可提现并踢出普通成员。"
+          ]
+        },
+        {
           "id": "spacer-5",
           "type": "spacer",
           "size": "small"
+        },
+        {
+          "id": "dissolve",
+          "type": "button",
+          "label": "解散合作社",
+          "tone": "danger",
+          "visibleWhen": {
+            "op": "or",
+            "args": [
+              {
+                "ref": "data.overview.canDissolve"
+              },
+              {
+                "op": "equals",
+                "args": [
+                  {
+                    "ref": "data.overview.membership.role"
+                  },
+                  {
+                    "value": "owner"
+                  }
+                ]
+              }
+            ]
+          },
+          "trigger": {
+            "type": "action",
+            "action": "dissolve"
+          }
         },
         {
           "id": "bank",
@@ -132,23 +172,30 @@
           "type": "divider"
         },
         {
-          "id": "danger",
-          "type": "text",
-          "text": "危险操作",
-          "tone": "danger"
-        },
-        {
           "id": "leave",
           "type": "button",
           "label": "退出合作社",
           "visibleWhen": {
-            "op": "notEquals",
+            "op": "and",
             "args": [
               {
-                "ref": "data.overview.membership.role"
+                "op": "notEquals",
+                "args": [
+                  {
+                    "ref": "data.overview.membership.role"
+                  },
+                  {
+                    "value": "owner"
+                  }
+                ]
               },
               {
-                "value": "owner"
+                "op": "not",
+                "args": [
+                  {
+                    "ref": "data.overview.canDissolve"
+                  }
+                ]
               }
             ]
           },
@@ -157,19 +204,6 @@
             "action": "leave"
           },
           "tone": "danger"
-        },
-        {
-          "id": "dissolve",
-          "type": "button",
-          "label": "解散合作社",
-          "tone": "danger",
-          "visibleWhen": {
-            "ref": "data.overview.canDissolve"
-          },
-          "trigger": {
-            "type": "action",
-            "action": "dissolve"
-          }
         }
       ]
     },

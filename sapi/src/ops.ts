@@ -14,6 +14,7 @@ import {
   coopAccountId,
   memberRowId,
   newCid,
+  resolveMemberRole,
   validateAmount,
   validateCoopName,
   type CoopAuditAction,
@@ -39,6 +40,18 @@ export interface Actor {
 
 function fail(message: string, code = "invalid_argument", status = 400): never {
   throw new ServiceError(message, code, status);
+}
+
+/**
+ * 取当前玩家在社内的实际职务（owner_id 优先于成员表 role）。
+ * 使用场景：门禁与按钮共用同一口径，避免「显示社长却没有管理键」。
+ */
+async function actorRole(
+  actor: Actor,
+  membership: MemberRow,
+): Promise<CoopRole> {
+  const coop = await getCoop(membership.cid);
+  return resolveMemberRole(membership.role, coop?.owner_id, actor.playerId);
 }
 
 /** 异步上报治理审计（失败不阻断主路径，由调用方 catch 或 fire-and-forget）。 */
@@ -158,7 +171,7 @@ export async function leaveCoop(actor: Actor): Promise<{ cid: string }> {
   const membership = await findMembership(actor.playerId);
   if (!membership) fail("你不在任何合作社中", "not_member", 404);
 
-  if (membership.role === "owner") {
+  if (await actorRole(actor, membership) === "owner") {
     fail("社长须先转让社长或解散合作社后再退出", "owner_must_transfer", 409);
   }
 
@@ -187,7 +200,7 @@ export async function leaveCoop(actor: Actor): Promise<{ cid: string }> {
 export async function transferOwner(actor: Actor, targetPlayerId: string): Promise<{ cid: string }> {
   const membership = await findMembership(actor.playerId);
   if (!membership) fail("你不在任何合作社中", "not_member", 404);
-  if (!canTransfer(membership.role as CoopRole)) fail("仅社长可转让", "forbidden", 403);
+  if (!canTransfer(await actorRole(actor, membership))) fail("仅社长可转让", "forbidden", 403);
 
   const target = await getMember(membership.cid, targetPlayerId);
   if (!target) fail("目标不是本社成员", "not_found", 404);
@@ -219,21 +232,31 @@ export async function transferOwner(actor: Actor, targetPlayerId: string): Promi
 export async function kickMember(actor: Actor, targetPlayerId: string): Promise<{ cid: string }> {
   const membership = await findMembership(actor.playerId);
   if (!membership) fail("你不在任何合作社中", "not_member", 404);
-  if (!canKick(membership.role as CoopRole)) fail("无权踢人", "forbidden", 403);
+  const coopForRole = await getCoop(membership.cid);
+  const role = resolveMemberRole(
+    membership.role,
+    coopForRole?.owner_id,
+    actor.playerId,
+  );
+  if (!canKick(role)) fail("无权踢人", "forbidden", 403);
 
   const target = await getMember(membership.cid, targetPlayerId);
   if (!target) fail("目标不是本社成员", "not_found", 404);
-  if (!canKickTarget(membership.role as CoopRole, target.role as CoopRole)) {
+  if (
+    !canKickTarget(
+      role,
+      resolveMemberRole(target.role, coopForRole?.owner_id, target.player_id),
+    )
+  ) {
     fail("不能踢出该成员", "forbidden", 403);
   }
 
-  const coop = await getCoop(membership.cid);
   const now = Date.now();
   await db.tx(async (tx) => {
     await tx.delete(MEMBERS_TABLE, target.id);
-    if (coop) {
-      await tx.update(COOPS_TABLE, coop.cid, {
-        member_count: Math.max(0, (Number(coop.member_count) || 1) - 1),
+    if (coopForRole) {
+      await tx.update(COOPS_TABLE, coopForRole.cid, {
+        member_count: Math.max(0, (Number(coopForRole.member_count) || 1) - 1),
         updated_at: now,
       });
     }
@@ -258,11 +281,16 @@ export async function promoteMember(
 ): Promise<{ cid: string }> {
   const membership = await findMembership(actor.playerId);
   if (!membership) fail("你不在任何合作社中", "not_member", 404);
-  if (!canManageRoles(membership.role as CoopRole)) fail("仅社长可调整职务", "forbidden", 403);
+  if (!canManageRoles(await actorRole(actor, membership))) fail("仅社长可调整职务", "forbidden", 403);
 
   const target = await getMember(membership.cid, targetPlayerId);
   if (!target) fail("目标不是本社成员", "not_found", 404);
-  if (target.role === "owner") fail("不能变更社长职务", "forbidden", 403);
+  const coopForTarget = await getCoop(membership.cid);
+  if (
+    resolveMemberRole(target.role, coopForTarget?.owner_id, target.player_id) ===
+    "owner"
+  )
+    fail("不能变更社长职务", "forbidden", 403);
 
   await db.tx(async (tx) => {
     await tx.update(MEMBERS_TABLE, target.id, { role });
@@ -314,7 +342,7 @@ export async function withdrawBank(actor: Actor, amountRaw: unknown): Promise<{ 
 
   const membership = await findMembership(actor.playerId);
   if (!membership) fail("你不在任何合作社中", "not_member", 404);
-  if (!canWithdraw(membership.role as CoopRole)) {
+  if (!canWithdraw(await actorRole(actor, membership))) {
     fail("普通成员无权提现，仅社长/管理员可操作", "forbidden", 403);
   }
 
@@ -356,7 +384,7 @@ export async function getBankBalance(cid: string): Promise<number> {
 export async function dissolveCoop(actor: Actor): Promise<{ cid: string }> {
   const membership = await findMembership(actor.playerId);
   if (!membership) fail("你不在任何合作社中", "not_member", 404);
-  if (!canDissolve(membership.role as CoopRole)) fail("仅社长可解散", "forbidden", 403);
+  if (!canDissolve(await actorRole(actor, membership))) fail("仅社长可解散", "forbidden", 403);
 
   const members = await listMembers(membership.cid);
   await db.tx(async (tx) => {

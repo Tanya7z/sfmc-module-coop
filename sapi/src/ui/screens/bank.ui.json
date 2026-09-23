@@ -81,7 +81,34 @@
       "type": "button",
       "label": "提现",
       "visibleWhen": {
-        "ref": "data.overview.canWithdraw"
+        "op": "or",
+        "args": [
+          {
+            "ref": "data.overview.canWithdraw"
+          },
+          {
+            "op": "equals",
+            "args": [
+              {
+                "ref": "data.overview.membership.role"
+              },
+              {
+                "value": "owner"
+              }
+            ]
+          },
+          {
+            "op": "equals",
+            "args": [
+              {
+                "ref": "data.overview.membership.role"
+              },
+              {
+                "value": "admin"
+              }
+            ]
+          }
+        ]
       },
       "trigger": {
         "type": "action",
