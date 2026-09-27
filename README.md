@@ -9,9 +9,9 @@ Wave C official SFMC module: **coop**（合作社公账与组织治理）。
 ## Develop
 
 ```bash
-npm install
-npm run typecheck
-npm test
+pnpm install
+pnpm run typecheck
+pnpm run test
 ```
 
 Install into platform:
